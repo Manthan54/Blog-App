@@ -1,0 +1,98 @@
+sudo apt update
+sudo apt upgrade -y
+
+
+sudo apt install -y npm git nginx
+sudo npm install -global pm2
+
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+git clone <REPO_URL>
+
+
+cd <REPO>/backend
+npm install
+npm run start OR npm run dev
+
+
+nano .env
+<ENTER YOUR VM IP>
+
+pm2 start index.js --name backend
+
+pm2 status
+pm2 logs
+pm2 save
+pm2 startup
+<ENTER sudo env PATH command generated after startup command>
+pm2 save
+pm2 status
+
+
+
+
+cd frontend
+npm install
+
+npm run dev
+
+nano .env
+<ENTER YOUR VM IP>
+
+
+npm run build
+
+
+ls dist
+
+
+sudo chmod 755 /home/azureuser/
+sudo chmod -R 755 /home/azureuser/<PROJECT NAME>/frontend/dist
+
+
+sudo nano /etc/nginx/sites-available/TODO-Deployment
+************************************************************************************************
+server {
+    listen 80;
+    server_name <YOUR_EC2_PUBLIC_IP>;
+
+    # Serve React frontend static files
+    root /home/azureuser/project_folder_name_main/frontend/dist;
+    index index.html;
+
+    # React Router SPA fallback — all unknown routes serve index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy all /api requests to Node.js backend on port 5000
+    location /api {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+************************************************************************************************
+
+
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo ln -s /etc/nginx/sites-available/TODO-Deployment /etc/nginx/sites-enabled/
+
+
+
+
+sudo systemctl reload nginx
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo systemctl status nginx
+
+
+
+
